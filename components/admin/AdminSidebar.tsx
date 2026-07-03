@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -9,29 +10,74 @@ import {
   Settings,
   LogOut,
   X,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { studentNavItems } from "@/lib/utils/navigation";
-import { studentDashboardData } from "@/lib/dummy/student/student-dashboard-data";
+import { adminNavItems, NavItem } from "@/lib/utils/navigation";
 
-interface StudentSidebarProps {
+interface AdminSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
+export function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
-  const user = studentDashboardData.user;
 
-  const getInitials = (name: string) =>
-    name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
+  const NavItemComponent = ({ item }: { item: NavItem }) => {
+    const Icon = getIconByName(item.icon);
+    const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    if (item.children) {
+      return (
+        <div className="space-y-1">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              isActive
+                ? "bg-blue-50 text-blue-700"
+                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            <span className="flex-1 text-left">{item.title}</span>
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          {isExpanded && (
+            <div className="ml-4 space-y-1 border-l border-slate-200 pl-4">
+              {item.children.map((child) => (
+                <NavItemComponent key={child.href} item={child} />
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        href={item.href}
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          isActive
+            ? "bg-blue-50 text-blue-700"
+            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+        )}
+      >
+        <Icon className="h-4 w-4" />
+        <span>{item.title}</span>
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -52,10 +98,10 @@ export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
       >
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
-          <Link href="/student" className="flex items-center gap-2">
+          <Link href="/admin" className="flex items-center gap-2">
             <GraduationCap className="h-6 w-6 text-blue-600" />
             <span className="text-lg font-bold text-slate-900">EduNexus</span>
-            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Student</span>
+            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Admin</span>
           </Link>
           <Button
             variant="ghost"
@@ -70,26 +116,9 @@ export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
         {/* Navigation */}
         <ScrollArea className="flex-1 px-3 py-4">
           <nav className="space-y-1">
-            {studentNavItems.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
-              const Icon = getIconByName(item.icon);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-blue-50 text-blue-700"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                </Link>
-              );
-            })}
+            {adminNavItems.map((item) => (
+              <NavItemComponent key={item.href} item={item} />
+            ))}
           </nav>
         </ScrollArea>
 
@@ -97,14 +126,14 @@ export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
         <div className="border-t border-slate-200 p-4 space-y-2">
           <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
             <Avatar className="h-8 w-8 border-2 border-slate-100">
-              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarImage src="/admin-avatar.jpg" />
               <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-bold">
-                {getInitials(user.name)}
+                AD
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{user.name}</p>
-              <p className="text-xs text-slate-500 truncate">{user.class} • {user.rollNo}</p>
+              <p className="text-sm font-medium text-slate-900 truncate">Admin User</p>
+              <p className="text-xs text-slate-500 truncate">admin@edunexus.edu</p>
             </div>
           </div>
 
@@ -113,7 +142,7 @@ export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
             className="w-full justify-start gap-3 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600"
             asChild
           >
-            <Link href="/settings?role=student" className="w-full justify-start gap-3 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600">
+            <Link href="/settings?role=admin" className="w-full justify-start gap-3 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600">
   <Settings className="h-4 w-4" />
   Settings
 </Link>

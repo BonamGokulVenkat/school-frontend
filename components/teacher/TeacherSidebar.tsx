@@ -2,38 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { getIconByName } from "@/lib/utils/icon-map";
 import {
-  LayoutDashboard,
-  Calendar,
-  BookOpen,
-  FileText,
-  BarChart,
+  GraduationCap,
   Settings,
   LogOut,
-  User,
-  GraduationCap,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { teacherNavItems } from "@/lib/utils/navigation";
 import { teacherDashboardData } from "@/lib/dummy/teacher/teacher-dashboard-data";
 
-const navItems = [
-  { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/teacher/attendance", label: "Mark Attendance", icon: Calendar },
-  { href: "/teacher/classes", label: "Class Management", icon: BookOpen },
-  { href: "/teacher/assignments", label: "Assignments", icon: FileText },
-  { href: "/teacher/grades", label: "Grade Management", icon: GraduationCap },
-  { href: "/teacher/analytics", label: "Analytics", icon: BarChart },
-  { href: "/teacher/profile", label: "Profile", icon: User },
-];
-
 interface TeacherSidebarProps {
-  isOpen?: boolean;
-  onClose?: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function TeacherSidebar({ isOpen = true, onClose }: TeacherSidebarProps) {
+export function TeacherSidebar({ isOpen, onClose }: TeacherSidebarProps) {
   const pathname = usePathname();
   const user = teacherDashboardData.user;
 
@@ -49,86 +38,97 @@ export function TeacherSidebar({ isOpen = true, onClose }: TeacherSidebarProps) 
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden"
           onClick={onClose}
         />
       )}
 
+      {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-50 h-full w-64 border-r border-slate-200 bg-white transition-transform duration-300 lg:sticky lg:translate-x-0 ${
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-300 lg:relative lg:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        )}
       >
-        <div className="flex h-full flex-col">
-          {/* Header */}
-          <div className="border-b border-slate-200 p-4">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 border-2 border-slate-100">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="bg-blue-100 text-blue-600">
-                  {getInitials(user.name)}
-                </AvatarFallback>
-              </Avatar>
+        {/* Header */}
+        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-4">
+          <Link href="/teacher" className="flex items-center gap-2">
+            <GraduationCap className="h-6 w-6 text-blue-600" />
+            <span className="text-lg font-bold text-slate-900">EduNexus</span>
+            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Teacher</span>
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={onClose}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
 
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-slate-900">
-                  {user.name}
-                </p>
-                <p className="truncate text-xs text-slate-500">
-                  {user.department}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
+        {/* Navigation */}
+        <ScrollArea className="flex-1 px-3 py-4">
+          <nav className="space-y-1">
+            {teacherNavItems.map((item) => {
+              const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+              const Icon = getIconByName(item.icon);
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={onClose}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-slate-600 hover:bg-slate-50"
-                  }`}
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  )}
                 >
-                  <Icon className="h-5 w-5" />
-                  {item.label}
+                  <Icon className="h-4 w-4" />
+                  <span>{item.title}</span>
                 </Link>
               );
             })}
           </nav>
+        </ScrollArea>
 
-          {/* Footer */}
-          <div className="space-y-2 border-t border-slate-200 p-4">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
-              asChild
-            >
-              <Link href="/settings" onClick={onClose}>
-                <Settings className="h-5 w-5" />
-                Settings
-              </Link>
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 px-3 text-sm font-medium text-red-600 hover:bg-red-50"
-              asChild
-            >
-              <Link href="/logout" onClick={onClose}>
-                <LogOut className="h-5 w-5" />
-                Logout
-              </Link>
-            </Button>
+        {/* Footer with Settings & Logout */}
+        <div className="border-t border-slate-200 p-4 space-y-2">
+          <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
+            <Avatar className="h-8 w-8 border-2 border-slate-100">
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-bold">
+                {getInitials(user.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-900 truncate">{user.name}</p>
+              <p className="text-xs text-slate-500 truncate">{user.department}</p>
+            </div>
           </div>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600"
+            asChild
+          >
+            <Link href="/settings?role=teacher" className="w-full justify-start gap-3 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600">
+  <Settings className="h-4 w-4" />
+  Settings
+</Link>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-red-600"
+            asChild
+          >
+            <Link href="/logout">
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Link>
+          </Button>
         </div>
       </aside>
     </>
